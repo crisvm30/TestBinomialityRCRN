@@ -3,19 +3,221 @@
 \usepackage{longtable}
 \usepackage{lscape}
 \usepackage{multicol}
-\usepackage{nopageno}
+%\usepackage{nopageno}
+\usepackage{algorithm2e}
 
 \begin{document}
-
-
-
-\begin{landscape}
 \title{Computation of the Kinetics of Chemical Reaction Networks}
-\date{}
-\author{}
+\date{June 15, 2020}
+\author{Cristian Vargas Montero and Hamid Rahkooy}
 \maketitle
 
+\section*{Graph Theoretical Algorithm for Testing Unconditional Binomiality of RCRN}
+
+Algorithm \ref{alg:binom-graph} tests unconditional binomiality via graphs for RCRN. Several functions used in Algorithm \ref{alg:binom-graph} are
+briefly explained below.
+\begin{itemize}
+\item \texttt{GetReactionVertices(graph)}: obtains all the reaction vertices of a graph
+\item \texttt{GetSpeciesVertices(graph)}: obtains all the species vertices of a graph
+\item \texttt{SetMark(species vertex,boolean)}: creates a flag for a species
+  vertex, which is initially set to unmarked(false).
+\item \texttt{GetConnectedSpecies(reaction vertex,graph)}: obtains all the
+  species vertices that are connected to a reaction vertex
+\item \texttt{IsNotMarked(species vertex)}: tells if a species vertex is not marked
+\item \texttt{ElimEdge(graph, species vertex, reaction vertex)}:
+  eliminates the edge that connects a species vertex and reaction
+  vertex
+\item \texttt{GetConnectedReactions(graph, species vertex)}: obtains all the
+  reaction vertices that are connected to a species vertex
+\item \texttt{AreConnected(graph,species vertex,reaction vertex)}: tells if a
+  species vertex is connected to a reaction vertex
+\item \texttt{GetCoeff(graph,species vertex,reaction vertex)}: obtains the
+  coeffient of the edge that goes from a species vertex to a reaction
+  vertex
+\item \texttt{UpdCoef(graph,species vertex,reaction vertex,coefficient)}:
+  updates the coefficient of the edge that goes from a species vertex
+  to a reaction vertex
+\item \texttt{AddEdge(graph, species vertex,reaction vertex,coefficient)}:
+  creates a new edge that connects a species vertex to a reaction
+  vertex and has the coefficient given
+\end{itemize}
+
+Functions \ref{alg:create-graph} and \ref{alg:checkb-graph} (used in Algorithm \ref{alg:binom-graph}) contain several methods that
+will be briefly explained:
+\begin{itemize}
+\item \texttt{CreateSpeciesVertex(graph,species)}: creates a species vertex in
+  the graph
+\item \texttt{CreateReactionVertex(graph,reaction)}: creates a reaction vertex
+  in the graph. Returns the reaction vertex created
+\item \texttt{GetSpecies(reaction)}: obtains the species that are present in
+  the reaction
+\item \texttt{GetSpeciesCoeff(species,reaction)}: obtains the coefficient of a
+  species in a reaction
+\item \texttt{GetSpeciesVertex(graph,species)}: obtains the species vertex of a
+  species in the graph
+\item \texttt{GetGraphComponents(graph)}: obtains all the components present in
+  a graph
+\end{itemize}
+
+\begin{algorithm}[H]
+ \footnotesize
+  \caption{Testing unconditional binomiality via graphs \label{alg:binom-graph}}
+  \DontPrintSemicolon
+  \SetAlgoVlined
+   \LinesNumbered
+  
+  % \SetNlSty{}{}{}
+  % \SetNlSkip{1em}
+  \SetKwProg{Fn}{Function}{}{end}
+  \SetKwFunction{BINOMTEST}{BinomialityTestViaGraph}
+  \SetKwFunction{CREATEGRAPH}{CreateGraph}
+  \SetKwFunction{MRK}{SetMark}
+  \SetKwFunction{GS}{GetConnectedSpecies}
+  \SetKwFunction{GR}{GetConnectedReactions}
+  \SetKwFunction{ISNMRK}{IsNotMarked}
+  \SetKwFunction{GCO}{GetCoeff}
+  \SetKwFunction{ICO}{UpdCf}
+  \SetKwFunction{ELED}{ElimEdge}
+  \SetKwFunction{ADDED}{AddEdge}
+  \SetKwFunction{CONN}{AreConnected}
+  \SetKwFunction{IB}{IsUnconditionallyBinomial}
+  \SetKwFunction{GETSVS}{GetSpeciesVertices}
+  \SetKwFunction{GETRVS}{GetReactionVertices}
+  
+  
+  \Fn{\BINOMTEST{$\mathcal{S,R,G}$}}{
+    \KwIn{\\$\mathcal{S}$: set of species of the RCRN\\$\mathcal{R}$: set of reactions of the RCRN}
+    \KwOut{UnconditionallyBinomial or NotUnconditionallyBinomial}
+    $\mathcal{G} := \CREATEGRAPH{$\mathcal{S,R}$}$\\
+    $SV := \GETSVS{$\mathcal{G}$}$\\
+    $RV := \GETRVS{$\mathcal{G}$}$\\
+    \ForEach{$s \in SV$}{
+        $\MRK{s,false} $
+    }
+    \ForEach{$r \in RV$}{
+        $speciesFound := false$\\
+        $cs := null$\\
+        $rSpecies := \GS{$\mathcal{G},r$}$\\
+        \ForEach{$sr \in rSpecies$}{
+            \uIf{\ISNMRK{$sr$}}{
+                $speciesFound := true$\\
+                $cs := sr$\\
+                $break$
+            }
+        }
+        \uIf{$speciesFound$}{
+            $\MRK{cs,true} $\\
+            \ForEach{$s^{\prime} \in rSpecies$}{
+                \uIf{$s^{\prime} \neq cs$}{
+                    $multX :=\frac{-\GCO{$\mathcal{G}$,$s^{\prime},r$}}{\GCO{$\mathcal{G}$,cs,r}}$\\
+                    $\ELED{$\mathcal{G},s^{\prime},r$}$\\
+                    $sReactions := \GR{$\mathcal{G},cs$}$\\
+                    \ForEach{$r^{\prime} \in sReactions$}{
+                        \uIf{$r^{\prime} \neq r$}{
+                            \uIf{$\CONN{$\mathcal{G},s^{\prime},r^{\prime}$}$}{
+                                $cf := \GCO{$\mathcal{G},cs,r^{\prime}$}*multiX + \GCO{$\mathcal{G},s^{\prime},r^{\prime}$}$\\
+                                \uIf{$cf \neq 0$}{
+                                    $\ICO{$\mathcal{G},s^{\prime},r^{\prime},cf$}$\\
+                                }
+                                \Else{
+                                    $\ELED{$\mathcal{G},s^{\prime},r^{\prime}$}$\\
+                                }
+                            }
+                            \Else{
+                              $cf := \GCO{$\mathcal{G},cs,r^{\prime}$}*multiX$\\ $\ADDED{$\mathcal{G},s^{\prime},r^{\prime},cf$}$ 
+                            }
+                        }
+                    }
+                    
+                }
+      
+      }
+    }
+    
+      
+    }
+    \uIf{\IB{$\mathcal{G}$}}{
+      $R:=UnconditionallyBinomial$\;
+    }
+    \Else{$R:=NotUnconditionallyBinomial$\;
+    }
+    \Return{$R$}\;
+  }
+  \end{algorithm}
+  
+  \begin{algorithm}[H]
+%  \begin{algorithm}
+  \SetAlgorithmName{Function}{}{}
+  \caption{Creating modified species--reaction graphs. \label{alg:create-graph}}
+  \DontPrintSemicolon
+  \SetAlgoVlined
+    
+  
+  \SetKwProg{Fn}{Function}{}{end}
+  \SetKwFunction{CREATEGRAPH}{CreateGraph}
+  \SetKwFunction{CRSV}{CreateSpeciesVertex}
+  \SetKwFunction{CRRV}{CreateReactionVertex}
+  \SetKwFunction{GETSPV}{GetSpeciesVertex}
+  \SetKwFunction{GETSP}{GetSpecies}
+  \SetKwFunction{GETSPCO}{GetSpeciesCoeff}
+
+  \Fn{\CREATEGRAPH{$\mathcal{S,R}$}}{
+  
+    \KwIn{\\$\mathcal{S}$: set of species of the RCRN\\$\mathcal{R}$: set of reactions of the RCRN\\ }
+    \KwOut{$\mathcal{G}$ graph representation of the RCRN}
+    $\mathcal{G} := empty$\\
+    \ForEach{$s \in \mathcal{S}$}{
+        $\CRSV{$\mathcal{G},s$} $
+    }
+    \ForEach{$r \in \mathcal{R}$}{
+        $rv := \CRRV{$\mathcal{G},r$} $\\
+        $speciesInReaction := \GETSP{r}$\\
+        \ForEach{$k \in speciesInReaction$}{
+            $coef := \GETSPCO{k,r}$\\
+            $spv := \GETSPV{$\mathcal{G},k$}$\\
+            $\ADDED{$\mathcal{G},spv,rv,coef$}$
+        }
+        
+    }
+    \Return{$\mathcal{G}$}\;
+  }
+  
+\end{algorithm}
+
+\begin{algorithm}[H]
+%\begin{algorithm}
+ \SetAlgorithmName{Function}{}{}
+  \caption{Testing unconditional binomiality in
+    graphs \label{alg:checkb-graph}
+}
+  \DontPrintSemicolon
+  \SetAlgoVlined
+  
+  \SetKwProg{Fn}{Function}{}{end}
+  \SetKwFunction{GETRVS}{GetReactionVertices}
+  \SetKwFunction{GETGCMP}{GetGraphComponents}
+  \SetKwFunction{IB}{IsUnconditionallyBinomial}
+  
+ \Fn{\IB{$\mathcal{G}$}}{
+    \KwIn{$\mathcal{G}$ graph representation of the RCRN}
+    \KwOut{boolean indicating if the RCRN is unconditionally binomial or not}
+    $result := true$\\
+    $components := \GETGCMP{$\mathcal{G}$}$\\
+    \ForEach{$c \in components$}{
+        $reactionV := \GETRVS{c}$\\
+        \uIf{$size(reactionV) > 1$}{
+            $result := false$\\
+            $break$
+        }
+    }
+    \Return{$result$}\;
+ } 
+
+\end{algorithm}
+\section*{Comparison of Performance of the Graph Theoretical Algorithm with Other Algorithms}
 In Table \ref{t:res}, $t_{1}$ is the time in seconds for the linear algebra Algorithm 1 from \cite{rahkooy2020linear}, $t_{2}$ is the time for the graph theoretical algorithm, $t_{3}$ and $t_{4}$ represent the time in seconds for Algorithms 1 and 4 from Table 1 in \cite{grigoriev2019efficiently} and $\bot$ identifies the computations that did not finish and a limit of six hours was reached.
+
+\begin{landscape}
 \setlength{\tabcolsep}{2pt}
 \begin{small}
 %\setlength\LTleft{-5in}
@@ -182,6 +384,8 @@ In Table \ref{t:res}, $t_{1}$ is the time in seconds for the linear algebra Algo
  \end{longtable}
 
 \end{small}
+
+\end{landscape}
 \begin{thebibliography}{10}
 \bibitem{grigoriev2019efficiently}
 Dima Grigoriev, Alexandru Iosif, Hamid Rahkooy, Thomas Sturm, and Andreas
@@ -198,7 +402,5 @@ Hamid Rahkooy and Thomas Sturm.
 
 
 \end{thebibliography}
-\end{landscape}
-
 \end{document}
 
