@@ -1,6 +1,6 @@
 BinomialRCRNGraph:=module()
 
-description "Testing binomiality of a reversible chemical reaction network using graphs";
+description "Testing unconditional binomiality of the steady state ideal of a reversible chemical reaction network using graphs";
 
 option
     package
@@ -21,7 +21,7 @@ export
 uses StringTools,GraphTheory;
 
 (* binomialViaGraph:
- * Procedure that receives a reversible chemical reaction network as a parameter and returns a string specifying if the network is binomial or not.
+ * Procedure that receives a reversible chemical reaction network as a parameter and returns a string specifying if the steady state ideal of the network is unconditionally binomial or not.
  * The parameter 'network' is a list of lists where each sub list represents a reaction. Each reaction contains 2 strings that represent the reactant and product complexes of the reaction.
  * For example, the network: 2A->B,C->D will have the next representation:[["2A","B"],["C","D"]]
  *)
@@ -87,9 +87,9 @@ binomialViaGraph := proc(network::list)
 	end do;	
 	local R := isBinomial(G);
 	if R then
-		return "Result: The network is binomial";
+		return "Result: The steady state ideal of the network is unconditionally binomial";
 	else
-		return "Result: The network is NOT binomial";
+		return "Result: The steady state ideal of the network is NOT unconditionally binomial";
 	end if;
 end proc:
 

@@ -1,6 +1,6 @@
 BinomialRCRN:=module()
 
-description "Testing binomiality of a reversible chemical reaction network";
+description "Testing unconditional binomiality of a reversible chemical reaction network";
 
 option
     package
@@ -23,7 +23,7 @@ uses StringTools,LinearAlgebra;
 
 
 (* binomialViaRREF:
- * Procedure that receives a reversible chemical reaction network as a parameter and returns a string specifying if the network is binomial or not.
+ * Procedure that receives a reversible chemical reaction network as a parameter and returns a string specifying if the steady state ideal of the  network is unconditionally binomial or not.
  * The parameter 'network' is a list of lists where each sub list represents a reaction. Each reaction contains 2 strings that represent the reactant and product complexes of the reaction.
  * For example, the network: 2A->B,C->D will have the next representation:[["2A","B"],["C","D"]]
  *)
@@ -60,9 +60,9 @@ binomialViaRREF := proc(network::list)
 	end do;
 
 	if isBinomial then
-		return "Result: The network is binomial";
+		return "Result: The steady state ideal of the network is unconditionally binomial";
 	else
-		return "Result: The network is NOT binomial";
+		return "Result: The steady state ideal of the network is NOT unconditionally binomial";
 	end if;
 end proc:
 
